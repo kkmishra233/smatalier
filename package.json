@@ -1,0 +1,17 @@
+{
+  "name": "interrior_backend",
+  "version": "1.0.0",
+  "description": "Simple app using node mailer ",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "kkmishra",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "express-handlebars": "^3.1.0",
+    "nodemailer": "^6.3.1"
+  }
+}
