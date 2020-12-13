@@ -105,7 +105,7 @@ transporter.sendMail(mailOptions, function (error) {
     if (error) {
         console.log('error:', error);
     } else {
-        console.log('good');
+        console.log('Email successfully sent . very good');
     }
 });
   res.render('contact',{msg:'Email has been sent successfully !'})
