@@ -53,12 +53,11 @@ app.get('/styling' , (req, res) => {
 
 app.post('/' , (req, res) => {
 	console.log(req.body);
-        if (!req.body.fname || !req.body.lname || !req.body.email || !req.body.cell) { 
-           console.log('Empty Object');
-	   res.render('contact',{msg:'Email sending failed!'});
-        }
-        else {
-
+  if (!req.body.fname || !req.body.lname || !req.body.email || !req.body.cell) { 
+    console.log('Empty Object');
+	 res.render('contact',{msg:'Email sending failed!'});
+  }
+else {
 	const output = `
 	<p>You have a new Query </p>
 	<h3>Here are the Contact Details</h3>
@@ -73,42 +72,69 @@ app.post('/' , (req, res) => {
 	<h3>Message</h3>
 	<p>${req.body.message}</p>
 	`;
-let nodemailer = require('nodemailer');
+  global.thisisOtherThanEnglishMatch
 
-const dotenv = require('dotenv');
-dotenv.config();
-
-let mailerConfig = {    
-    host: "smtp.gmail.com",  
-    secureConnection: false,
-    port: 587,
-    tls: {
-        rejectUnauthorized:false
-    },
-    auth: {
-        user: "smatelier19@gmail.com",
-        pass: `${process.env.SMTP_PASSWORD}`
-    }
-};
-let transporter = nodemailer.createTransport(mailerConfig);
-
-let mailOptions = {
-    from: mailerConfig.auth.user,
-    to: 'info@smateliers.com',
-    subject: "You have a new Query",
-    text: "Hello Admin", 
-    html: output // html body
-
-};
-
-transporter.sendMail(mailOptions, function (error) {
+  global.thisisOtherThanEnglishMatch = false;
+  var CloudmersiveNlpApiClient = require('cloudmersive-nlp-api-client');
+  var defaultClient = CloudmersiveNlpApiClient.ApiClient.instance;
+  // Configure API key authorization: Apikey
+  var Apikey = defaultClient.authentications['Apikey'];
+  Apikey.apiKey = `${process.env.NLP_API_KEY}`;
+  var apiInstance = new CloudmersiveNlpApiClient.LanguageDetectionApi();
+  var textToDetect = `${req.body.message}`; // String | Text to detect language of
+  var callback = function(error, data, response) {
     if (error) {
-        console.log('error:', error);
+      console.error(error);
     } else {
-        console.log('Email successfully sent . very good');
+      parsed_data = JSON.stringify(data)
+      if(parsed_data.DetectedLanguage_FullName != "English"){
+         global.thisisOtherThanEnglishMatch = true;
+         console.log(global.thisisOtherThanEnglishMatch)
+           if (global.thisisOtherThanEnglishMatch === true){
+              res.render('contact');
+            }
+            else{
+                let nodemailer = require('nodemailer');
+                const dotenv = require('dotenv');
+                dotenv.config();
+
+                let mailerConfig = {    
+                    host: "smtp.gmail.com",  
+                    secureConnection: false,
+                    port: 587,
+                    tls: {
+                        rejectUnauthorized:false
+                    },
+                    auth: {
+                        user: "smatelier19@gmail.com",
+                        pass: `${process.env.SMTP_PASSWORD}`
+                    }
+                };
+                let transporter = nodemailer.createTransport(mailerConfig);
+
+                let mailOptions = {
+                    from: mailerConfig.auth.user,
+                    to: 'info@smateliers.com',
+                    subject: "You have a new Query",
+                    text: "Hello Admin", 
+                    html: output // html body
+
+                };
+
+                transporter.sendMail(mailOptions, function (error) {
+                    if (error) {
+                        console.log('error:', error);
+                    } else {
+                        console.log('Email successfully sent . very good');
+                    }
+                });
+                res.render('contact',{msg:'Email has been sent successfully !'})
+            }
+      }
     }
-});
-  res.render('contact',{msg:'Email has been sent successfully !'})
+  };
+  const nlpoutput = apiInstance.languageDetectionPost(textToDetect, callback);
+  console.log(nlpoutput)
 }
 });
 
