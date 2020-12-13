@@ -87,57 +87,59 @@ else {
       console.error(error);
     } else {
       parsed_data = JSON.stringify(data)
-      if(parsed_data.DetectedLanguage_FullName != "English"){
+
+        if(parsed_data.DetectedLanguage_FullName != "English"){
           global.thisisOtherThanEnglishMatch = true;
           console.log(global.thisisOtherThanEnglishMatch)
-          if (global.thisisOtherThanEnglishMatch === true){
-            res.render('contact');
-          }
         }
-
-        else{
-            let nodemailer = require('nodemailer');
-            const dotenv = require('dotenv');
-            dotenv.config();
-
-            let mailerConfig = {    
-                host: "smtp.gmail.com",  
-                secureConnection: false,
-                port: 587,
-                tls: {
-                    rejectUnauthorized:false
-                },
-                auth: {
-                    user: "smatelier19@gmail.com",
-                    pass: `${process.env.SMTP_PASSWORD}`
-                }
-            };
-            let transporter = nodemailer.createTransport(mailerConfig);
-
-            let mailOptions = {
-                from: mailerConfig.auth.user,
-                to: 'info@smateliers.com',
-                subject: "You have a new Query",
-                text: "Hello Admin", 
-                html: output // html body
-
-            };
-
-            transporter.sendMail(mailOptions, function (error) {
-                if (error) {
-                    console.log('error:', error);
-                } else {
-                    console.log('Email successfully sent . very good');
-                }
-            });
-            res.render('contact',{msg:'Email has been sent successfully !'})
-            }
+        console.log(parsed_data)
     }
   };
   try {
     console.log("entering try block");
     const nlpoutput = apiInstance.languageDetectionPost(textToDetect, callback);
     console.log(nlpoutput)
+    
+    if (global.thisisOtherThanEnglishMatch === true){
+      res.render('contact');
+    }
+    else{
+      let nodemailer = require('nodemailer');
+      const dotenv = require('dotenv');
+      dotenv.config();
+
+      let mailerConfig = {    
+          host: "smtp.gmail.com",  
+          secureConnection: false,
+          port: 587,
+          tls: {
+              rejectUnauthorized:false
+          },
+          auth: {
+              user: "smatelier19@gmail.com",
+              pass: `${process.env.SMTP_PASSWORD}`
+          }
+      };
+      let transporter = nodemailer.createTransport(mailerConfig);
+
+      let mailOptions = {
+          from: mailerConfig.auth.user,
+          to: 'info@smateliers.com',
+          subject: "You have a new Query",
+          text: "Hello Admin", 
+          html: output
+      };
+
+      transporter.sendMail(mailOptions, function (error) {
+          if (error) {
+              console.log('error:', error);
+          } else {
+              console.log('Email successfully sent . very good');
+          }
+      });
+      res.render('contact',{msg:'Email has been sent successfully !'})
+    }
+
   }
   catch (e) {
     console.log("entering catch block");
