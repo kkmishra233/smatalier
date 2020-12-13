@@ -72,35 +72,46 @@ else {
 	<h3>Message</h3>
 	<p>${req.body.message}</p>
 	`;
-  global.thisisOtherThanEnglishMatch
 
-  global.thisisOtherThanEnglishMatch = false;
-  var CloudmersiveNlpApiClient = require('cloudmersive-nlp-api-client');
-  var defaultClient = CloudmersiveNlpApiClient.ApiClient.instance;
-  // Configure API key authorization: Apikey
-  var Apikey = defaultClient.authentications['Apikey'];
-  Apikey.apiKey = `${process.env.NLP_API_KEY}`;
-  var apiInstance = new CloudmersiveNlpApiClient.LanguageDetectionApi();
-  var textToDetect = `${req.body.message}`; // String | Text to detect language of
-  var callback = function(error, data, response) {
-    if (error) {
-      console.error(error);
-    } else {
-      parsed_data = JSON.stringify(data)
-
-        if(parsed_data.DetectedLanguage_FullName != "English"){
-          global.thisisOtherThanEnglishMatch = true;
-          console.log(global.thisisOtherThanEnglishMatch)
-        }
-        console.log(parsed_data)
-    }
-  };
+  global.thisisOtherThanEnglishMatch;
+  thisisOtherThanEnglishMatch = false;
+  
   try {
     console.log("entering try block");
-    const nlpoutput = apiInstance.languageDetectionPost(textToDetect, callback);
-    console.log(nlpoutput)
     
-    if (global.thisisOtherThanEnglishMatch === true){
+    function nlpfunc(_callback) {
+        var textToDetect = `${req.body.message}`;
+        var CloudmersiveNlpApiClient = require('cloudmersive-nlp-api-client');
+        var defaultClient = CloudmersiveNlpApiClient.ApiClient.instance;
+        // Configure API key authorization: Apikey
+        var Apikey = defaultClient.authentications['Apikey'];
+        Apikey.apiKey = `${process.env.NLP_API_KEY}`;
+        var apiInstance = new CloudmersiveNlpApiClient.LanguageDetectionApi();
+        
+        var callback = function(error, data, response) {
+          if (error) {
+            console.error(error);
+          } else {
+            parsed_data = JSON.stringify(data)
+              if(parsed_data.DetectedLanguage_FullName != "English"){
+                thisisOtherThanEnglishMatch = true;
+                console.log("Setting language name flag is "+thisisOtherThanEnglishMatch)
+              }
+          }
+        };
+      apiInstance.languageDetectionPost(textToDetect,callback);
+      console.log("Getting language name flag is "+ thisisOtherThanEnglishMatch)
+      _callback()
+    }
+
+    function sendFunction(){
+        nlpfunc(function() {
+            console.log('I\'m done!');
+        });
+    }
+    sendFunction()
+
+    if (thisisOtherThanEnglishMatch === true){
       res.render('contact');
     }
     else{
