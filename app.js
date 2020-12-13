@@ -133,8 +133,51 @@ else {
       }
     }
   };
-  const nlpoutput = apiInstance.languageDetectionPost(textToDetect, callback);
-  console.log(nlpoutput)
+  try {
+    console.log("entering try block");
+    const nlpoutput = apiInstance.languageDetectionPost(textToDetect, callback);
+    console.log(nlpoutput)
+  }
+  catch (e) {
+    console.log("entering catch block");
+    console.log(e);
+    let nodemailer = require('nodemailer');
+    const dotenv = require('dotenv');
+    dotenv.config();
+
+    let mailerConfig = {    
+        host: "smtp.gmail.com",  
+        secureConnection: false,
+        port: 587,
+        tls: {
+            rejectUnauthorized:false
+        },
+        auth: {
+            user: "smatelier19@gmail.com",
+            pass: `${process.env.SMTP_PASSWORD}`
+        }
+    };
+    let transporter = nodemailer.createTransport(mailerConfig);
+
+    let mailOptions = {
+        from: mailerConfig.auth.user,
+        to: 'info@smateliers.com',
+        subject: "You have a new Query",
+        text: "Hello Admin", 
+        html: output // html body
+
+    };
+
+    transporter.sendMail(mailOptions, function (error) {
+        if (error) {
+            console.log('error:', error);
+        } else {
+            console.log('Email successfully sent . very good');
+        }
+    });
+    res.render('contact',{msg:'Email has been sent successfully !'})
+    console.log("leaving catch block");
+  }
 }
 });
 
