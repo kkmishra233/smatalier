@@ -75,6 +75,9 @@ app.post('/' , (req, res) => {
 	`;
 let nodemailer = require('nodemailer');
 
+const dotenv = require('dotenv');
+dotenv.config();
+
 let mailerConfig = {    
     host: "smtp.gmail.com",  
     secureConnection: false,
@@ -84,7 +87,7 @@ let mailerConfig = {
     },
     auth: {
         user: "smatelier19@gmail.com",
-        pass: "blessed1994"
+        pass: `${process.env.SMTP_PASSWORD}`
     }
 };
 let transporter = nodemailer.createTransport(mailerConfig);
