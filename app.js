@@ -21,7 +21,7 @@ app.get('/' , (req, res) => {
 	res.render('contact');
 });  
 
-app.listen(3000, () => console.log("Server Started .."))
+app.listen(5000, () => console.log("Server Started .."))
 
 //service - commercial page
 app.get('/commercial' , (req, res) => {
@@ -53,6 +53,12 @@ app.get('/styling' , (req, res) => {
 
 app.post('/' , (req, res) => {
 	console.log(req.body);
+        if (!req.body.fname || !req.body.lname || !req.body.email || !req.body.cell) { 
+           console.log('Empty Object');
+	   res.render('contact',{msg:'Email sending failed!'});
+        }
+        else {
+
 	const output = `
 	<p>You have a new Query </p>
 	<h3>Here are the Contact Details</h3>
@@ -67,33 +73,40 @@ app.post('/' , (req, res) => {
 	<h3>Message</h3>
 	<p>${req.body.message}</p>
 	`;
+let nodemailer = require('nodemailer');
 
-// create reusable transporter object using the default SMTP transport
-  let transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
+let mailerConfig = {    
+    host: "smtp.gmail.com",  
+    secureConnection: false,
     port: 587,
-    secure: false, // true for 465, false for other ports
-    auth: {
-      user: "smatelier19@gmail.com", // generated ethereal user
-      pass: "blessed1994" // generated ethereal password
+    tls: {
+        rejectUnauthorized:false
     },
-    tls:{
-    	rejectUnauthorized:false
+    auth: {
+        user: "smatelier19@gmail.com",
+        pass: "blessed1994"
     }
-  });
+};
+let transporter = nodemailer.createTransport(mailerConfig);
 
- // send mail with defined transport object
-  transporter.sendMail({
-    from: '"SMAtelier : you have a new Query !" <smatelier19@gmail.com>', // sender address
-    to: "info@smateliers.com,kkbit233@gmail.com",// list of receivers
-    subject: "You have a new Query", // Subject line
-    text: "Hello Admin", // plain text body
+let mailOptions = {
+    from: mailerConfig.auth.user,
+    to: 'info@smateliers.com',
+    subject: "You have a new Query",
+    text: "Hello Admin", 
     html: output // html body
-  });
 
-  // console.log("Message sent: %s", info.messageId);
-  // console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+};
+
+transporter.sendMail(mailOptions, function (error) {
+    if (error) {
+        console.log('error:', error);
+    } else {
+        console.log('good');
+    }
+});
   res.render('contact',{msg:'Email has been sent successfully !'})
+}
 });
 
 
