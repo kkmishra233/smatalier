@@ -59,102 +59,47 @@ app.post('/' , (req, res) => {
   }
 else {
 	const output = `
-	<p>You have a new Query </p>
-	<h3>Here are the Contact Details</h3>
+  <h3>A contact query received from Mr./Ms.: ${req.body.fname}</h3>
+	<h4>Find Contact Details here: </h4>
 	<ul>
 		<li>First Name : ${req.body.fname}</li>
 		<li>Last Name : ${req.body.lname}</li>
 		<li>Email Address : ${req.body.email}</li>
 		<li>Cell Number : ${req.body.cell}</li>
 	</ul>
-	<h3>Subject</h3>
-	<p>${req.body.subject}</p>
-	<h3>Message</h3>
+	<h4>Message</h4>
 	<p>${req.body.message}</p>
 	`;
 
-  global.thisisOtherThanEnglishMatch;
-  thisisOtherThanEnglishMatch = false;
-  
-  try {
-    console.log("entering try block");
-    
-    function nlpfunc(_callback) {
-        var textToDetect = `${req.body.message}`;
-        var CloudmersiveNlpApiClient = require('cloudmersive-nlp-api-client');
-        var defaultClient = CloudmersiveNlpApiClient.ApiClient.instance;
-        // Configure API key authorization: Apikey
-        var Apikey = defaultClient.authentications['Apikey'];
-        Apikey.apiKey = `${process.env.NLP_API_KEY}`;
-        var apiInstance = new CloudmersiveNlpApiClient.LanguageDetectionApi();
-        
-        var callback = function(error, data, response) {
-          if (error) {
-            console.error(error);
-          } else {
-            parsed_data = JSON.stringify(data)
-              if(parsed_data.DetectedLanguage_FullName != "English"){
-                thisisOtherThanEnglishMatch = true;
-                console.log("Setting language name flag is "+thisisOtherThanEnglishMatch)
-              }
-          }
-        };
-      apiInstance.languageDetectionPost(textToDetect,callback);
-      console.log("Getting language name flag is "+ thisisOtherThanEnglishMatch)
-      _callback()
-    }
+  const LanguageDetect = require('languagedetect');
+  const lngDetector = new LanguageDetect(); 
 
-    function sendFunction(){
-        nlpfunc(function() {
-            console.log('I\'m done!');
-        });
-    }
-    sendFunction()
+  global.thisisNotEnglishMatch;
+  global.thisisEnglishMatch;
+  thisisNotEnglishMatch = false;
+  thisisEnglishMatch = false;
+  var textToDetect = `${req.body.message}`;
+  var detectedLanguage = lngDetector.detect(textToDetect, 4)
+  var preference1 = detectedLanguage[0].slice(",")[0]
+  var preference2 = detectedLanguage[1].slice(",")[0]
+  var preference3 = detectedLanguage[2].slice(",")[0]
+  var preference4 = detectedLanguage[3].slice(",")[0]
 
-    if (thisisOtherThanEnglishMatch === true){
-      res.render('contact');
-    }
-    else{
-      let nodemailer = require('nodemailer');
-      const dotenv = require('dotenv');
-      dotenv.config();
-
-      let mailerConfig = {    
-          host: "smtp.gmail.com",  
-          secureConnection: false,
-          port: 587,
-          tls: {
-              rejectUnauthorized:false
-          },
-          auth: {
-              user: "smatelier19@gmail.com",
-              pass: `${process.env.SMTP_PASSWORD}`
-          }
-      };
-      let transporter = nodemailer.createTransport(mailerConfig);
-
-      let mailOptions = {
-          from: mailerConfig.auth.user,
-          to: 'info@smateliers.com',
-          subject: "You have a new Query",
-          text: "Hello Admin", 
-          html: output
-      };
-
-      transporter.sendMail(mailOptions, function (error) {
-          if (error) {
-              console.log('error:', error);
-          } else {
-              console.log('Email successfully sent . very good');
-          }
-      });
-      res.render('contact',{msg:'Email has been sent successfully !'})
-    }
-
+  console.log(preference1+preference2+preference3+preference4)
+  if(preference1 == "english" || preference2 == "english" || preference3 == "english"  || preference4 == "english" ){
+    thisisEnglishMatch = true;
   }
-  catch (e) {
-    console.log("entering catch block");
-    console.log(e);
+  else{
+    thisisNotEnglishMatch = true;
+  }
+
+  console.log("English Match : "+thisisEnglishMatch)
+  console.log("Not English Match : "+thisisNotEnglishMatch)
+
+  if (thisisNotEnglishMatch){
+    res.render('contact');
+  }
+  if (thisisEnglishMatch){
     let nodemailer = require('nodemailer');
     const dotenv = require('dotenv');
     dotenv.config();
@@ -176,10 +121,9 @@ else {
     let mailOptions = {
         from: mailerConfig.auth.user,
         to: 'info@smateliers.com',
-        subject: "You have a new Query",
-        text: "Hello Admin", 
-        html: output // html body
-
+        subject: `${req.body.subject}`,
+        text: "A contact message from:"+`${req.body.fname}`, 
+        html: output
     };
 
     transporter.sendMail(mailOptions, function (error) {
@@ -190,7 +134,6 @@ else {
         }
     });
     res.render('contact',{msg:'Email has been sent successfully !'})
-    console.log("leaving catch block");
   }
 }
 });
